@@ -83,21 +83,38 @@ So we have two problems in deployment:
 
 #### 1.1.3.2 Manageability issues
 
-The second category is about our ability to properly manage the deployment process. There are all kinds of operations that we need to be able to perform, such as packaging, transferring, installing, upgrading, uninstalling, and answering various queries; i.e., we have to be able to support the evolution of a software system. All these operations require various bits of information, can be time-consuming, and if not done properly can lead to incorrect deployment. For example:
+The second category is about our ability to properly manage the deployment process. There are all kinds of operations that we need to be able to perform, such as packaging, transferring, installing, upgrading, uninstalling, and answering various queries; i.e., we have to be able to support the *evolution* of a software system. All these operations require various bits of information, can be time-consuming, and if not done properly can lead to incorrect deployment. For example:
 
-• When we uninstall a component, we have to know what steps to take to safely undo the installation, e.g., by deleting files and modifying configuration files. At the same time we must also take care never to remove any component still in use by some other part of the system.
+  + **Uninstalling**
 
-• Likewise, when we perform a component upgrade, we should be careful not to over- write any part of any component that might induce a failure in another part of the system. This is the well-known DLL hell, where upgrading or installing one applica- tion can cause a failure in another application due to shared dynamic libraries. It has been observed that software systems often suffer from the seemingly inexplicable phenomenon of “bit rot,” i.e., that applications that worked initially stop working over time due to changes in the environment [26].
+    When we uninstall a component, we have to know what steps to take to safely undo the installation, e.g., by deleting files and modifying configuration files. At the same time we must also take care never to remove any component still in use by some other part of the system.
 
-• Administrators often want to perform queries such as “to what component does this file belong?”, “how much disk space will it take to install this component?”, “from what sources was this component built?”, and so on.
+  + **Upgrading**
 
-• Maintenance of a system means keeping the software up to date. There are many different policy choices that can be made. For instance, in a network, system ad- ministrators may want to push updates (such as security fixes) to all client machines periodically. On the other hand, if users are allowed to administer their own ma- chines, it should be possible for them to select components individually.
+    Likewise, when we perform a component upgrade, we should be careful not to overwrite any part of any component that might induce a failure in another part of the system. This is the well-known *DLL hell*, where upgrading or installing one application can cause a failure in another application due to shared dynamic libraries. It has been observed that software systems often suffer from the seemingly inexplicable phenomenon of “bit rot,” i.e., that applications that worked initially stop working over time due to changes in the environment [26].
 
-• When we upgrade components, it is important to be able to undo, or roll back the effects of the upgrade, if the upgrade turns out to break important functionality. This requires both that we remember what the old configuration was, and that we have some way to reproduce the old configuration.
+> [26] Anders Christensen and Tor Egge. Store — a system for handling third-party applications in a heterogeneous computer environment. In Selected papers from the ICSE SCM-4 and SCM-5 Workshops on Software Configuration Management, number 1005 in Lecture Notes in Computer Science. Springer-Verlag,
+1995.
 
-• In heterogeneous networks (i.e., consisting of many different types of machines), or in small environments (e.g., a home computer), it is not easy to stay up to date with software updates. In particular in the case of security fixes this is an important problem. So we need to know what software is in use, whether updates are available, and whether such updates should be performed.
+  + **Reversibility**
 
-• Components can often be deployed in both source and binary form. Binary pack- ages have to be built for each supported platform, and sometimes in several variants as well. For instance, the Linux kernel has thousands of build-time configuration options. This greatly increases the deployment effort, particularly if packaging and transfer of packages is a manual or semi-automatic process.
+    When we upgrade components, it is important to be able to *undo*, or *roll back* the effects of the upgrade, if the upgrade turns out to break important functionality. This requires both that we remember what the old configuration was, and that we have some way to reproduce the old configuration.
 
-• Since components often have a huge amount of variability, we sometimes want to expose that variability to certain users. For instance, Linux distributors or system administrators typically want to make specific feature selections. A deployment system should support this.
+  + **Querying**
+
+    Administrators often want to perform queries such as “to what component does this file belong?”, “how much disk space will it take to install this component?”, “from what sources was this component built?”, and so on.
+
+  + **Maintenance**
+
+    That is, keeping software on a system  up to date. There are many different policy choices that can be made. For instance, in a network, system administrators may want to push updates (such as security fixes) to all client machines periodically. On the other hand, if users are allowed to administer their own machines, it should be possible for them to select components individually.
+
+    In heterogeneous networks (i.e., consisting of many different types of machines), or in small environments (e.g., a home computer), it is not easy to stay up to date with software updates. In particular in the case of security fixes this is an important problem. So we need to know what software is in use, whether updates are available, and whether such updates should be performed.
+
+  + **Deployment**
+
+    Components can often be deployed in both source and binary form. Binary pack- ages have to be built for each supported platform, and sometimes in several variants as well. For instance, the Linux kernel has thousands of build-time configuration options. This greatly increases the deployment effort, particularly if packaging and transfer of packages is a manual or semi-automatic process.
+
+  + **Variability**
+
+    Since components often have a huge amount of variability, we sometimes want to expose that variability to certain users. For instance, Linux distributors or system administrators typically want to make specific feature selections. A deployment system should support this.
 
