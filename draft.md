@@ -17,6 +17,9 @@ ployment is especially difficult in heavily component-based systems—such as Un
 open source software—because the effort of dealing with the dependencies can increase
 super-linearly with each additional dependency.
 
+> Admonishment (NOTE):
+(Add a note or a link here to sections describing what a component is. In the PhD thesis, the section is "3.1 What is a component?". Figure out where to put it.)
+
 ## 1.1 Software deployment
 
 Software deployment is the problem of managing the distribution of software to end-user machines.
@@ -40,28 +43,16 @@ The first category is essentially about correctness. The software might make all
 
 Some concrete issues are the following:
 
-• A software component is almost never self-contained; rather, it depends on other
-components to do some work on its behalf. These are its dependencies. For correct
-deployment, it is necessary that all dependencies are identified. This identification
-is quite hard, however, as it is often difficult to test whether the dependency specifi-
-cation is complete. After all, if we forget to specify a dependency, we don’t discover
-that fact if the machine on which we are testing already happens to have the depen-
-dency installed.
-• Dependencies are not just a runtime issue. To build a component in the first place we
-need certain dependencies (such as compilers), and these need not be the same as the
-runtime dependencies, although there may be some overlap. In general, deployment
-of the build-time dependencies is not an end-user issue, but it might be in source-
-based deployment scenarios; that is, when a component is deployed in source form.
-This is common in the open source world.
-• Dependencies also need to be compatible with what is expected by the referring
-component. In general, not all versions of a component will work. This is the case
-even in the presence of type-checked interfaces, since interfaces never give a full
-specification of the observable behaviour of a component. Also, components often
-exhibit build-time variability, meaning that they can be built with or without certain
-optional features, or with other parameters selected at build time. Even worse, the
-component might be dependent on a specific compiler, or on specific compilation
-options being used for its dependencies (e.g., for Application Binary Interface (ABI)
-compatibility).
+  + **Identifying the dependencies of software components**
+
+    A software component is almost never self-contained; rather, it depends on other components to do some work on its behalf. These are its **runtime dependencies**. For correct deployment, it is necessary that all dependencies are identified. This identification is quite hard, however, as it is often difficult to test whether the dependency specification is complete. After all, if we forget to specify a dependency, we don’t discover that fact if the machine on which we are testing already happens to have the dependency installed.
+
+    In *source-based* deployment scenarios - when a component is deployed in source form- the component has to be built in the first place. This requires certain dependencies (**build-time dependencies**, such as compilers), and these need not be the same as the runtime dependencies, although there may be some overlap.
+
+  + **Compatibility of dependencies**
+
+    Dependencies also need to be *compatible* with what is expected by the referring component. In general, not all versions of a component will work. This is the case even in the presence of type-checked interfaces, since interfaces never give a full specification of the observable behaviour of a component. Also, components often exhibit build-time variability, meaning that they can be built with or without certain optional features, or with other parameters selected at build time. Even worse, the component might be dependent on a specific compiler, or on specific compilation options being used for its dependencies (e.g., for Application Binary Interface (ABI) compatibility).
+
 • Even if all required dependencies are present, our component still has to find them,
 in order to actually establish a concrete composition of components. This is often
 a rather labour-intensive part of the deployment process. Examples include setting
