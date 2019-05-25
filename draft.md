@@ -51,13 +51,39 @@ Some concrete issues are the following:
 
   + **Compatibility of dependencies**
 
-    Dependencies also need to be *compatible* with what is expected by the referring component. In general, not all versions of a component will work. This is the case even in the presence of type-checked interfaces, since interfaces never give a full specification of the observable behaviour of a component. Also, components often exhibit build-time variability, meaning that they can be built with or without certain optional features, or with other parameters selected at build time. Even worse, the component might be dependent on a specific compiler, or on specific compilation options being used for its dependencies (e.g., for Application Binary Interface (ABI) compatibility).
+    Dependencies also need to be *compatible* with what is expected by the referring component. In general, not all versions of a component will work. This is the case even in the presence of type-checked interfaces, since interfaces never give a full specification of the observable behaviour of a component.
 
-• Even if all required dependencies are present, our component still has to find them,
-in order to actually establish a concrete composition of components. This is often
-a rather labour-intensive part of the deployment process. Examples include setting
-up the dynamic linker search path on Unix systems [160], or the CLASSPATH in the
-Java environment.
-• Components can depend on non-software artifacts, such as configuration files, user
-accounts, and so on. For instance, a component might keep state in a database that
-has to be initialised prior to its first use.
+    Components also often exhibit build-time *variability*, meaning that they can be built with or without certain optional features, or with other parameters selected at build time. Even worse, the component might be dependent on a specific compiler, or on specific compilation options being used for its dependencies (e.g., for Application Binary Interface (ABI) compatibility).
+
+  + **Location of dependencies**
+
+    Even if all required dependencies are present, our component still has to *find* them, in order to actually establish a concrete composition of components. This is often a rather labour-intensive part of the deployment process. Examples include setting up the dynamic linker search path on Unix systems [160], or the CLASSPATH in the Java environment.
+
+> [160] TIS Committee. Tool Interface Specification (TIS) Executable and Linking Format (ELF) Specification, Version 1.2. http://www.x86.org/ftp/manuals/tools/elf.pdf, May 1995.
+
+  + **Non-software dependencies**
+
+    Components can depend on non-software artifacts, such as configuration files, user accounts, and so on. For instance, a component might keep state in a database that has to be initialised prior to its first use.
+
+  + **Hardware requirements**
+
+    Components can require certain hardware characteristics, such as a specific proces- sor type or a video card. These are somewhat outside the scope of software deployment, since we can at most *check* for such properties, not *realise* them if they are missing.
+
+  + **Distributed dependencies**
+
+    Finally, deployment can be a distributed problem. A component can depend on other components running on remote machines or as separate processes on the same machine. For instance, a typical multi-tier web service consists of an HTTP server, a server implementing the business logic, and a database server, possibly all running on different machines.
+
+So we have two problems in deployment:
+
+  1. we must *identify* what our component’s requirements on the environment are, and
+
+  2. we must somehow *realise* those requirements in the target environment.
+
+     Realisation might consist of installing dependencies, creating or modifying configuration files, starting remote processes, and so on.
+
+Manageability issues The second category is about our ability to properly manage the
+deployment process. There are all kinds of operations that we need to be able to perform,
+such as packaging, transferring, installing, upgrading, uninstalling, and answering various
+queries; i.e., we have to be able to support the evolution of a software system. All these
+operations require various bits of information, can be time-consuming, and if not done
+properly can lead to incorrect deployment. For example:
