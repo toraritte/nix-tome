@@ -118,3 +118,33 @@ The second category is about our ability to properly manage the deployment proce
 
     Since components often have a huge amount of variability, we sometimes want to expose that variability to certain users. For instance, Linux distributors or system administrators typically want to make specific feature selections. A deployment system should support this.
 
+## TODO: comparing other tools
+
+> Roll section 1.2 and 7.6 into one. How outdated is it? Maybe making it an appendix would be better.
+
+## 1.3 Motivation
+
+> TODO: This is just a re-listing of the ailments of the currents systems. Try to integrate it with 1.1.
+
+From the previous discussion of existing deployment systems it should be clear that they
+lack important features to support safe and efficient deployment. In particular, they have
+some or all of the following problems:
+• Dependency specifications are not validated, leading to incomplete deployment.
+• Dependency specifications are inexact (e.g., nominal).
+• It is not possible to deploy multiple versions or variants of a component side-by-side.
+• Components can interfere with each other.
+• It is not possible to roll back to previous configurations.
+• Upgrade actions are not atomic.
+• Applications must be monolithic, i.e., they must statically contain all their depen-
+dencies.
+• Deployment actions can only be performed by administrators, not by unprivileged
+users.
+• There is no link between binaries and the sources and build processes that built them.
+• The system supports either source deployment or binary deployment, but not both;
+or it supports both but in a non-unified way.
+• It is difficult to adapt components.
+• Component composition is manual.
+• The component framework is narrowly restricted to components written in a specific
+programming language or framework.
+• The system depends on non-portable techniques.
+The objective of the research described in this thesis is to develop a deployment system
