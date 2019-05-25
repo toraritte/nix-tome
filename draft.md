@@ -18,3 +18,19 @@ open source software—because the effort of dealing with the dependencies can i
 super-linearly with each additional dependency.
 
 ## 1.1 Software deployment
+
+Software deployment is the problem of managing the distribution of software to end-user machines.
+
+### 1.1.2 Correct deployment
+
+That is, a developer has created some piece of software, and this ultimately has to end up on the machines of end-users. After the initial installation of the software, it might need to be upgraded or uninstalled.  Presumably, the developer has tested the software and found it to work sufficiently well, so the challenge is to make sure that the software works just as well, i.e., the same, on the end-user machines.
+
+**Correct deployment**: given identical inputs, the software should behave the same on an end-user machine as on the developer machine.
+
+> Admonishment (NOTE):
+Beware of the gross simplifications made above: First, in general there is no single “developer”. Second, there are usually several intermediaries between the developer and the end-user, such as a system administrator. However, for a discussion of the main issues this will suffice.
+
+### 1.1.3 Factors affecting correct deployment
+
+Deployment *should* be a simple problem. For instance, if the software consists of a set of files, then deployment should be a simple matter of *copying* those to the target machines. In practice, this turns out to be much harder, and the causes fall into two broad categories: **environment issues** and **manageability issues**.
+
