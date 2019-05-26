@@ -118,33 +118,71 @@ The second category is about our ability to properly manage the deployment proce
 
     Since components often have a huge amount of variability, we sometimes want to expose that variability to certain users. For instance, Linux distributors or system administrators typically want to make specific feature selections. A deployment system should support this.
 
-## TODO: comparing other tools
+## 1.2 Motivation
 
-> Roll section 1.2 and 7.6 into one. How outdated is it? Maybe making it an appendix would be better.
+The main purpose of Nix is to support safe and efficient deployment, and to address problems of existing deployment systems, such as:
 
-## 1.3 Motivation
+  + Dependency specifications are not validated, leading to incomplete deployment (i.e., missing dependencies cause the software component fail to run).
 
-> TODO: This is just a re-listing of the ailments of the currents systems. Try to integrate it with 1.1.
+  + Dependency specifications are inexact (e.g., nominal).
 
-From the previous discussion of existing deployment systems it should be clear that they
-lack important features to support safe and efficient deployment. In particular, they have
-some or all of the following problems:
-• Dependency specifications are not validated, leading to incomplete deployment.
-• Dependency specifications are inexact (e.g., nominal).
-• It is not possible to deploy multiple versions or variants of a component side-by-side.
-• Components can interfere with each other.
-• It is not possible to roll back to previous configurations.
-• Upgrade actions are not atomic.
-• Applications must be monolithic, i.e., they must statically contain all their depen-
-dencies.
-• Deployment actions can only be performed by administrators, not by unprivileged
-users.
-• There is no link between binaries and the sources and build processes that built them.
-• The system supports either source deployment or binary deployment, but not both;
-or it supports both but in a non-unified way.
-• It is difficult to adapt components.
-• Component composition is manual.
-• The component framework is narrowly restricted to components written in a specific
-programming language or framework.
-• The system depends on non-portable techniques.
-The objective of the research described in this thesis is to develop a deployment system
+  + It is not possible to deploy multiple versions or variants of a component side-by-side.
+
+  + Components can interfere with each other.
+
+  + It is not possible to roll back to previous configurations.
+
+  + Upgrade actions are not atomic.
+
+  + Applications must be monolithic, i.e., they must statically contain all their dependencies.
+
+  + Deployment actions can only be performed by administrators, not by unprivileged users.
+
+  + There is no link between binaries and the sources and build processes that built them.
+
+  + The system supports either source deployment or binary deployment, but not both; or it supports both but in a non-unified way.
+
+  + It is difficult to adapt components.
+
+  + Component composition is manual.
+
+  + The component framework is narrowly restricted to components written in a specific programming language or framework.
+
+  + The system depends on non-portable techniques.
+
+> Admonishment (NOTE): See appendix (number and link here) for a comparison of other approaches to deployment.
+> TODO: Roll section 1.2 and 7.6 into one. How outdated is it? Maybe making it an appendix would be better.
+
+The Nix approach is to store software components in isolation from each other in a central component store, under path names that contain cryptographic hashes of all inputs involved in building the component, such as `/nix/store/rwmfbhb2znwp...-firefox-1.0.4`.
+
+  + The cryptographic hashing scheme used by the Nix component store prevents undeclared dependencies, giving us **complete deployment**. Furthermore it provides support for side-by-side existence of component versions and variants.
+
+  + **Isolation between components** prevents interference.
+
+  + **Users can install software independently from each other**, without requiring mutual trust relations. Components that are common between users are shared, i.e., stored only once.
+
+  + **Atomic upgrades**; there is no time window in which the system is in an inconsistent state.
+
+  + Nix supports **O(1)-time rollbacks** to previous configurations.
+
+  + Nix supports **automatic garbage collection** of unused components.
+
+  + The Nix component language describes not just how to build individual components, but also **compositions**. The language is a lazy, purely functional language. This is a good basis for a component composition language, as it allows dependencies and variability to be expressed in an elegant and flexible way.
+
+  + Nix has a **transparent source/binary deployment model** that marries the best parts of source deployment models such as the FreeBSD Ports Collection, and binary deployment models such as RPM. In essence, binary deployment is an automatic optimisation of source deployment.
+
+  + Nix is **policy-free**; it provides mechanisms to implement various deployment policies, but does not enforce a specific one. Examples of policies are channels (TODO: link to channels), and pure source deployments.
+
+> Admonishment (NOTE):
+> One-click installations are also possible (see [TODO: phd bib ref to thesis], page 43), and were in fact implemented in the past, but have been removed since. See [NixOS/nix issue #1783](https://github.com/NixOS/nix/issues/1783).
+
+  + The purely functional model supports **efficient component upgrades** despite the fact that a change to a fundamental component can propagate massively through the dependency graph.
+
+  + Nix supports **distributed multi-platform builds** in a transparent manner, i.e., a remote build is indistinguishable from a local build from the perspective of the user.
+
+  + Nix provides a good basis for the implementation of a build farm, which supports continuous integration, portability testing, improved manageability, and release management (i.e., it builds concrete installable components that can be deployed directly through Nix)
+
+  + The use of Nix for software deployment extends naturally to the field of **service deployment**. Services are running processes that provide some useful facility to users, such as web servers. They consist of software components, static configuration and data, and mutable state. The first two aspects can be managed using Nix, and its advantages—such as rollbacks and side-by-side deployment—apply here as well.
+> TODO: microservices
+
+  + Though Nix is typically used to build *large-grained components* (i.e., traditional packages), it can also be used to **build** *small-grained components* such as **individual source files**. When used in this way it is a superior alternative to build managers such as Make [56], ensuring complete dependency specifications and enabling more sharing between builds.
