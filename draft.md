@@ -118,9 +118,7 @@ The second category is about our ability to properly manage the deployment proce
 
     Since components often have a huge amount of variability, we sometimes want to expose that variability to certain users. For instance, Linux distributors or system administrators typically want to make specific feature selections. A deployment system should support this.
 
-## 1.2 Motivation
-
-The main purpose of Nix is to support safe and efficient deployment, and to address problems of existing deployment systems, such as:
+## 1.2 Problem summary of existing deployment systems
 
   + Dependency specifications are not validated, leading to incomplete deployment (i.e., missing dependencies cause the software component fail to run).
 
@@ -153,7 +151,9 @@ The main purpose of Nix is to support safe and efficient deployment, and to addr
 > Admonishment (NOTE): See appendix (number and link here) for a comparison of other approaches to deployment.
 > TODO: Roll section 1.2 and 7.6 into one. How outdated is it? Maybe making it an appendix would be better.
 
-The Nix approach is to store software components in isolation from each other in a central component store, under path names that contain cryptographic hashes of all inputs involved in building the component, such as `/nix/store/rwmfbhb2znwp...-firefox-1.0.4`.
+## 1.3 The Nix approach
+
+The main purpose of Nix is to support safe and efficient deployment. The Nix approach is to store software components in isolation from each other in a central component store, under path names that contain cryptographic hashes of all inputs involved in building the component, such as `/nix/store/rwmfbhb2znwp...-firefox-1.0.4`. It guarantees that:
 
   + The cryptographic hashing scheme used by the Nix component store prevents undeclared dependencies, giving us **complete deployment**. Furthermore it provides support for side-by-side existence of component versions and variants.
 
