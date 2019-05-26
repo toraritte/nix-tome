@@ -18,7 +18,9 @@ open source software—because the effort of dealing with the dependencies can i
 super-linearly with each additional dependency.
 
 > Admonishment (NOTE):
-(Add a note or a link here to sections describing what a component is. In the PhD thesis, the section is "3.1 What is a component?". Figure out where to put it.)
+> (TODO Add a note or a link here to sections describing what a component is. In the PhD thesis, the section is "3.1 What is a component?". Figure out where to put it.)
+> Add [155] Clemens Szyperski. Component technology—what, where, and how? In Proceedings of the 25th International Conference on Software Engineering (ICSE 2003), pages 684–693, May 2003.
+> ... and section 2.1 The Nix store
 
 ## 1.1 Software deployment
 
@@ -241,3 +243,194 @@ Software Construction and Software Deployment” [46].
 > data Tree = Leaf String | Branch Tree Tree
 > defines a binary tree type with strings stored in the leaves. An example value is7
 
+## 2. An Overview of Nix
+
+> TODO: This section in the PhD thesis informally introduces some of the terminology, shows an example derivation, and some of the main features, then later sections jump in the deep end, referencing back. This approac has been borrowed by other Nix tutorials (or theFreeswitch 1.8 book that goes into the dialplan topic 3 times, scattering the resources)
+> Maybe this is the right approach. Experiment.
+
+> TODO: How much did the Nix internals change?
+
+### what is a component
+
+https://dl.acm.org/citation.cfm?id=515228
+Clemens Szyperski: Component Software: Beyond Object-Oriented Programming
+
+“A software component is a unit of composition with contractually
+specified interfaces and explicit context dependencies only. A
+software component can be deployed independently and is subject
+to composition by third parties.”
+
+Nix is a system for software deployment. The term component will be used to denote the basic units of deployment. These are simply sets of files that implement some arbitrary functionality through an interface. In fact, Nix does not really care what a component actually is. As far as Nix is concerned a component is just a set of files in a file system. That is, we have a very weak notion of component, weaker even than the commonly used definition in [155]. (What we call a component typically corresponds to the ambiguous notion of a package in package management systems. Nix’s notion of components is discussed further in Section 3.1.)
+
+Nix stores components in a component store, also called the Nix store. The store is simply a designated directory in the file system, usually /nix/store . The entries in that directory are components (and some other auxiliary files discussed later). Each component is stored in isolation; no two components have the same file name in the store.  A subset of a typical Nix store is shown in Figure 2.1. It contains a number of applications—GNU Hello 2.1.1 (a toy program that prints “Hello World”, Subversion 1.1.4 (a version management system), and Subversion 1.2.0—along with some of their dependencies.
+
+These components are not single files, but directory trees. For instance, Subversion consists of a directory called bin containing a program called svn , and a directory lib containing many more files belonging to the component. (For simplicity, many files and dependencies have been omitted from the example.) The arrows denote runtime dependencies between components, which will be described shortly.
+
+The notable feature in Figure 2.1 is the names of the components in the Nix store,
+such as /nix/store/bwacc7a5c5n3...-hello-2.1.1 . The initial part of the file names, e.g.,
+bwacc7a5c5n3... , is what gives Nix the ability to prevent undeclared dependencies and
+component interference. It is a representation of the cryptographic hash of all inputs in-
+volved in building the component.
+Cryptographic hash functions are hash functions that map an arbitrary-length input onto
+a fixed-length bit string. They have the property that they are collision-resistant: it is
+computationally infeasible to find two inputs that hash to the same value. Cryptographic
+hashes are discussed in more detail in Section 5.1. Nix uses 160-bit hashes represented in
+a base-32 notation, so each hash is 32 characters long. In this thesis, hashes are abridged
+to ellipses ( ... ) most of the time for reasons of legibility. The full path of a directory entry
+in the Nix store is referred to as its store path. An example of a full store path is:
+/nix/store/bwacc7a5c5n3qx37nz5drwcgd2lv89w6-hello-2.1.1
+So the file bin/hello in that component has the full path
+/nix/store/bwacc7a5c5n3qx37nz5drwcgd2lv89w6-hello-2.1.1/bin/hello
+The hash is computed over all inputs, including the following:
+• The sources of the components.
+• The script that performed the build.
+• Any arguments or environment variables [152] passed to the build script.
+• All build time dependencies, typically including the compiler, linker, any libraries
+used at build time, standard Unix tools such as cp and tar , the shell, and so on.
+Cryptographic hashes in store paths serve two main goals. They prevent interference
+between components, and they allow complete identification of dependencies. The lack
+of these two properties is the cause for the vast majority of correctness and flexibility
+problems faced by conventional deployment systems, as we saw in Section 1.2.
+**Preventing interference** Since the hash is computed over all inputs to the build process
+of the component, any change, no matter how slight, will be reflected in the hash. This
+includes changes to the dependencies; the hash is computed recursively. Thus, the hash
+essentially provides a unique identifier for a configuration. If two component compositions
+differ in any way, they will occupy different paths in the store (except for dependencies that
+they have in common). Installation or uninstallation of a configuration therefore will not
+interfere with any other configuration.
+For instance, in the Nix store in Figure 2.1 there are two versions of Subversion. They
+were built from different sources, and so their hashes differ. Additionally, Subversion
+1.2.0 uses a newer version of the OpenSSL cryptographic library. This newer version of
+OpenSSL likewise exists in a path different from the old OpenSSL. Thus, even though
+installing a new Subversion entails installing a new OpenSSL, the old Subversion instance
+is not affected, since it continues to use the old OpenSSL.
+Recursive hash computation causes changes to a component to “propagate” through the
+dependency graph. This is illustrated in Figure 2.3, which shows the hash components of
+the store paths computed for the Mozilla Firefox component (a web browser) and some of
+its build time dependencies, both before and after a change is made to one of those depen-
+dencies. (An edge from a node A to a node B denotes that the build result of A is an input to
+the build process of B.) Specifically, the GTK GUI library dependency is updated from ver-
+sion 2.2.4 to 2.4.13. That is, its source bundle ( gtk+-2.2.4.tar.bz2 and gtk+-2.4.13.tar.bz2 ,
+respectively) changes. This change propagates through the dependency graph, causing dif-
+ferent store paths to be computed for the GTK component and the Firefox component.
+However, components that do not depend on GTK, such as Glibc (the GNU C Library),
+are unaffected.
+An important point here is that upgrading only happens by rebuilding the component in
+question and all components that depend on it. We never perform a destructive upgrade.
+Components never change after they have been built—they are marked as read-only in the
+file system. Assuming that the build process for a component is deterministic, this means
+that the hash identifies the contents of the components at all times, not only just after it has
+been built. Conversely, the build-time inputs determine the contents of the component.
+Therefore we call this a purely functional model. In purely functional programming
+languages such as Haskell [135], as in mathematics, the result of a function call depends
+exclusively on the definition of the function and on the arguments. In Nix, the contents of
+a component depend exclusively on the build inputs. The advantage of a purely functional
+model is that we obtain strong guarantees about components, such as non-interference.
+Preventing interference
+Identifying dependencies The use of cryptographic hashes in component file names
+also prevents the use of undeclared dependencies, which (as we saw in Section 1.2) is the
+major cause of incomplete deployment. The reason that incomplete dependency informa-
+tion occurs is that there is generally nothing that prevents a component from accessing
+another component, either at build time or at runtime. For instance, a line in a build script
+or Makefile such as
+Figure 2.3.: Propagation of dependency changes through the store paths of the build-time
+component dependency graph
+gcc -o program main.c ui.c -lssl
+which links a program consisting of two C modules against a library named ssl , causes
+the linker to search in a set of standard locations for a library called ssl 1 . These standard
+locations typically include “global” system directories such as /usr/lib on Unix systems. If
+the library happens to exist in one of those directories, we have incurred a dependency.
+However, there is nothing that forces us to include this dependency in the dependency
+specifications of the deployment system (e.g., in the RPM spec file of Figure 1.2).
+At runtime we have the same problem. Since components can perform arbitrary I/O
+actions, they can load and use other components. For instance, if the library ssl used
+above is a dynamic library, then program will contain an entry in its dynamic linkage
+meta-information that causes the dynamic linker to search for the library when program is
+started. The dynamic linker similarly searches in global locations such as /lib and /usr/lib .
+Of course, there are countless mechanisms other than static or dynamic linking that es-
+tablish a component composition. Some examples are including C header files, importing
+Java classes at compile time, calling external programs found through the PATH environ-
+ment variable, and loading help files at runtime.
+The hashing scheme neatly prevents these problems by not storing components in global
+locations, but in isolation from each other. For instance, assuming that all components in
+the system are stored in the Nix store, the linker line
+gcc -o program main.c ui.c -lssl
+will simply fail to find libssl . Unless the path to an OpenSSL instance (e.g., /nix/store/-
+5jq6jgkamxjj...-openssl-0.9.7d ) was explicitly fed into the build process and added to the
+linker’s search path, no such instance will be found by the linker.
+Also, we go to some lengths to ensure that component builders are pure, that is, not
+influenced by outside factors. For example, the builder is called with an empty set of
+environment variables (such as the PATH environment variable, which is used by Unix
+shells to locate programs) to prevent user settings such as search paths from reaching tools
+invoked by the builder. Similarly, at runtime on Linux systems, we use a patched dynamic
+linker that does not search in any default locations—so if a dynamic library is not explicitly
+declared with its full path in an executable, the dynamic linker will not find it.
+Thus, when the developer or deployer fails to specify a dependency explicitly (in the Nix
+expression formalism, discussed below), the component will fail deterministically. That
+is, it will not succeed if the dependency already happens to be available in the Nix store,
+without having been specified as an input. By contrast, the deployment systems discussed
+in Section 1.2 allow components to build or run successfully even if some dependencies
+are not declared.
+Retained dependencies A rather tricky aspect to dependency identification is the oc-
+currence of retained dependencies. This is what happens when the build process of a
+component stores a path to a dependency in the component. For instance, the linker invo-
+cation above will store the path of the OpenSSL library in program , i.e., program will have
+a “hard-coded” reference to /nix/store/5jq6jgkamxjj...-openssl-0.9.7d/lib/libssl.so .
+Figure 2.4 shows a dump of parts of the Subversion executable stored in the file /nix/-
+store/v2cc475f6nv1...-subversion-1.1.4/bin/svn . Offsets are on the left, a hexadecimal rep-
+resentation in the middle, and an ASCII representation on the right. The build process for
+Subversion has caused a reference to the aforementioned OpenSSL instance to be stored in
+the program’s executable image. The path of OpenSSL has been stored in the RPATH field
+of the header of the ELF executable, which specifies a list of directories to be searched
+by the dynamic linker at runtime [160]. Even though our patched dynamic linker does
+not search in /nix/store/5jq6jgkamxjj...-openssl-0.9.7d/lib by default, it will find the library
+anyway through the executable’s RPATH .
+This might appear to be bad news for our attempts to prevent undeclared dependencies.
+Of course, we happen to know the internal structure of Unix executables, so for this specific
+file format we can discover retained dependencies. But we do not know the format of every
+file type, and we do not wish to commit ourselves to a single component composition
+mechanism. E.g., Java and .NET can find retained dependencies by looking at class files
+and assemblies, respectively, but only for their specific dynamic linkage mechanisms (and
+not for dependencies loaded at runtime).
+The hashing scheme comes to the rescue once more. The hash part of component paths
+is highly distinctive, e.g., 5jq6jgkamxjj... . Therefore we can discover retained dependen-
+cies generically, independent of specific file formats, by scanning for occurrences of hash
+parts. For instance, the executable image in Figure 2.4 contains the highlighted string
+5jq6jgkamxjj... , which is evidence that an execution of the svn program might need that
+particular OpenSSL instance. Likewise, we can see that it has a retained dependency on
+some Glibc instance ( /nix/store/72by2iw5wd8i... . Thus, we automatically add these as run-
+time dependencies of the Subversion component. Using this scanning approach, we find
+the runtime dependencies indicated in Figure 2.1.
+This approach might seem a bit dodgy. After all, what happens when a file name is rep-
+resented in a non-standard way, e.g., in UTF-16 [34, Section 2.5] or when the executable
+is compressed? In Chapter 3 the dependency problem is cast in terms of memory man-
+agement in programming languages, which justifies the scanning approach as an analogue
+of conservative garbage collection. Whether this is a legitimate approach is an empirical
+question, which is addressed in Section 7.1.5.
+Note that strictly speaking it is not the use of cryptographic hashes per se, but globally
+unique identifiers in file names that make this work. A sufficiently long pseudo-random
+number also does the trick. However, the hashes are needed to prevent interference, while
+at the same time preventing unnecessary duplication of identical components (which would
+happen with random paths).
+Section 1.2 first stated the goal of complete deployment: safe deployment re-
+quires that there are no missing dependencies. This means that we need to deploy closures
+of components under the “depends-on” relation. That is, when we deploy (i.e., copy) a
+component X to a client machine, and X depends on Y , then we also need to deploy Y to
+the client machine.
+The hash scanning approach gives us all runtime dependencies of a component, while
+hashes themselves prevent undeclared build-time dependencies. Furthermore, these de-
+pendencies are exact, not nominal (see page 8). Thus, Nix knows the entire dependency
+graph, both at build time and runtime. With full knowledge of the dependency graph, Nix
+can compute closures of components. Figure 2.2 shows the closure of the Subversion 1.1.4
+instance in the Nix store, found by transitively following all dependency arrows.
+In summary, the purely functional model, and its concrete implementation in the form
+of the hashing approach used by the Nix store, prevents interference and enables complete
+deployment. It makes deployment much more likely to be correct, and is therefore one
+of the major results of this thesis. However, the purely functional model does provoke a
+number of questions, such as:
+Closures
+• Hashes do not appear to be very user-friendly. Can we hide them from users in
+everyday interaction?
+• Can we deploy upgrades efficiently? That is, suppose that we want to upgrade Glibc
+(a dependency of all other components in Figure 2.1). Can we prevent a costly
+redownload of all dependent components?
