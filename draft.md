@@ -186,3 +186,58 @@ The Nix approach is to store software components in isolation from each other in
 > TODO: microservices
 
   + Though Nix is typically used to build *large-grained components* (i.e., traditional packages), it can also be used to **build** *small-grained components* such as **individual source files**. When used in this way it is a superior alternative to build managers such as Make [56], ensuring complete dependency specifications and enabling more sharing between builds.
+
+> TODO: Incorporate.
+> Parts of this thesis are adapted from earlier publications. Chapter 2, “An Over-
+view of Nix” is very loosely based on the LISA ’04 paper “Nix: A Safe and Policy-
+Free System for Software Deployment”, co-authored with Merijn de Jonge and Eelco
+Visser [50]. Chapter 3, “Deployment as Memory Management” is based on Sections 3–6 of
+the ICSE 2004 paper “Imposing a Memory Management Discipline on Software Deploy-
+ment”, written with Eelco Visser and Merijn de Jonge [52]. Chapter 6, “The Intensional
+Model” is based on the ASE 2005 paper “Secure Sharing Between Untrusted Users in a
+Transparent Source/Binary Deployment Model” [48]. Section 7.5 on patch deployment
+appeared as the CBSE 2005 paper “Efficient Upgrading in a Purely Functional Compo-
+nent Deployment Model” [47]. Chapter 9, “Service Deployment” is based on the SCM-12
+paper “Service Configuration Management”, written with Martin Bravenboer and Eelco
+Visser [49]. Snippets of Section 10.2 were taken from the SCM-11 paper “Integrating
+Software Construction and Software Deployment” [46].
+
+> TODO: Where to put "1.7. Notational conventions"? Appendix? Let's see when getting into the more in-depth sections.
+>
+> Part II of this thesis contains a number of algorithms in a pseudo-code notation in an im-
+> perative style with some functional elements. Keywords in algorithms are in boldface,
+> variables are in italic, and function names are in sans serif . Callouts like this 1 are fre-
+> quently used to refer to points of interest in algorithms and listings from the text. Variable
+> assignment is written x ← value.
+> Sets are written in curly braces, e.g., {1, 2, 3}. Since many algorithms frequently extend
+> ∪
+> variables of set type with new elements, there is a special notation x ← set which is syn-
+> ∪
+> tactic sugar for x ← x ∪ set. For instance, x ← {2, 3} extends the set stored in x with the
+> elements 2 and 3.
+> 1Set comprehensions are a concise notation for set construction: {expr | conditions} pro-
+> duces a set by applying the expression expr to all values from a (usually implicit) universe
+> that meet the predicate conditions. For example, {x 2 | x ∈ {2, 3, 4} ∧ x 6 = 3} produces the
+> set {4, 16}.
+> Ordered lists are written between square brackets, e.g., [1, 2, 1, 3]. Lists can contain ele-
+> ments multiple times. Lists are sometimes manipulated in a functional (Haskell-like [135])
+> style using the function map and λ -abstraction: x ← map (λ v . f (v), y) constructs a list x by
+> applying a function f (v) to each element in the list x. For instance, map (λ x . x 2 , [4, 2, 6])
+> produces the list [16, 4, 36]. Tuples or pairs are enclosed in parentheses, e.g., (a, b, c).
+> Throughout this thesis, storage sizes are given in IEC units [33]: 1 KiB = 1024 bytes,
+> 1 MiB = 1024 2 bytes, and 1 GiB = 1024 3 bytes.
+> Data types are defined in a Haskell-like notation. For instance, the definition
+> data Foo = Foo {
+> x : String ,
+> ys : [ String ],
+> zs : { String }
+> }
+> defines a data type Foo with three fields: a string x , a list of strings ys , and a set of strings
+> zs . An example of the construction of a value of this type is as follows:
+> Foo {x = "test" , ys = [ "hello" , "world" ], zs = 0}
+> /
+> In addition, types can have unnamed fields and multiple constructors. For example, the
+> definition
+> data Tree = Leaf String | Branch Tree Tree
+> defines a binary tree type with strings stored in the leaves. An example value is7
+
