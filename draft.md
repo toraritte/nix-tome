@@ -21,6 +21,15 @@ super-linearly with each additional dependency.
 > (TODO Add a note or a link here to sections describing what a component is. In the PhD thesis, the section is "3.1 What is a component?". Figure out where to put it.)
 > Add [155] Clemens Szyperski. Component technology—what, where, and how? In Proceedings of the 25th International Conference on Software Engineering (ICSE 2003), pages 684–693, May 2003.
 > ... and section 2.1 The Nix store
+>
+> https://dl.acm.org/citation.cfm?id=515228
+> Clemens Szyperski: Component Software: Beyond Object-Oriented Programming
+> 
+> “A software component is a unit of composition with contractually
+> specified interfaces and explicit context dependencies only. A
+> software component can be deployed independently and is subject
+> to composition by third parties.”
+
 
 ## 1.1 Software deployment
 
@@ -95,8 +104,7 @@ The second category is about our ability to properly manage the deployment proce
 
     Likewise, when we perform a component upgrade, we should be careful not to overwrite any part of any component that might induce a failure in another part of the system. This is the well-known *DLL hell*, where upgrading or installing one application can cause a failure in another application due to shared dynamic libraries. It has been observed that software systems often suffer from the seemingly inexplicable phenomenon of “bit rot,” i.e., that applications that worked initially stop working over time due to changes in the environment [26].
 
-> [26] Anders Christensen and Tor Egge. Store — a system for handling third-party applications in a heterogeneous computer environment. In Selected papers from the ICSE SCM-4 and SCM-5 Workshops on Software Configuration Management, number 1005 in Lecture Notes in Computer Science. Springer-Verlag,
-1995.
+> [26] Anders Christensen and Tor Egge. Store — a system for handling third-party applications in a heterogeneous computer environment. In Selected papers from the ICSE SCM-4 and SCM-5 Workshops on Software Configuration Management, number 1005 in Lecture Notes in Computer Science. Springer-Verlag, 1995.
 
   + **Reversibility**
 
@@ -157,7 +165,7 @@ The second category is about our ability to properly manage the deployment proce
 
 The main purpose of Nix is to support safe and efficient deployment. The Nix approach is to store software components in isolation from each other in a central component store, under path names that contain cryptographic hashes of all inputs involved in building the component, such as `/nix/store/rwmfbhb2znwp...-firefox-1.0.4`. It guarantees that:
 
-  + The cryptographic hashing scheme used by the Nix component store prevents undeclared dependencies, giving us **complete deployment**. Furthermore it provides support for side-by-side existence of component versions and variants.
+  + The cryptographic hashing scheme used by the Nix component store prevents undeclared dependencies, giving us **complete deployment** (i.e., there are no missing dependencies during any deployment task). Furthermore it provides support for side-by-side existence of component versions and variants.
 
   + **Isolation between components** prevents interference.
 
@@ -252,14 +260,6 @@ Software Construction and Software Deployment” [46].
 
 ### what is a component
 
-https://dl.acm.org/citation.cfm?id=515228
-Clemens Szyperski: Component Software: Beyond Object-Oriented Programming
-
-“A software component is a unit of composition with contractually
-specified interfaces and explicit context dependencies only. A
-software component can be deployed independently and is subject
-to composition by third parties.”
-
 Nix is a system for software deployment. The term component will be used to denote the basic units of deployment. These are simply sets of files that implement some arbitrary functionality through an interface. In fact, Nix does not really care what a component actually is. As far as Nix is concerned a component is just a set of files in a file system. That is, we have a very weak notion of component, weaker even than the commonly used definition in [155]. (What we call a component typically corresponds to the ambiguous notion of a package in package management systems. Nix’s notion of components is discussed further in Section 3.1.)
 
 Nix stores components in a component store, also called the Nix store. The store is simply a designated directory in the file system, usually /nix/store . The entries in that directory are components (and some other auxiliary files discussed later). Each component is stored in isolation; no two components have the same file name in the store.  A subset of a typical Nix store is shown in Figure 2.1. It contains a number of applications—GNU Hello 2.1.1 (a toy program that prints “Hello World”, Subversion 1.1.4 (a version management system), and Subversion 1.2.0—along with some of their dependencies.
@@ -327,7 +327,7 @@ exclusively on the definition of the function and on the arguments. In Nix, the 
 a component depend exclusively on the build inputs. The advantage of a purely functional
 model is that we obtain strong guarantees about components, such as non-interference.
 Preventing interference
-Identifying dependencies The use of cryptographic hashes in component file names
+**Identifying dependencies** The use of cryptographic hashes in component file names
 also prevents the use of undeclared dependencies, which (as we saw in Section 1.2) is the
 major cause of incomplete deployment. The reason that incomplete dependency informa-
 tion occurs is that there is generally nothing that prevents a component from accessing
@@ -371,7 +371,8 @@ is, it will not succeed if the dependency already happens to be available in the
 without having been specified as an input. By contrast, the deployment systems discussed
 in Section 1.2 allow components to build or run successfully even if some dependencies
 are not declared.
-Retained dependencies A rather tricky aspect to dependency identification is the oc-
+
+**Retained dependencies** A rather tricky aspect to dependency identification is the oc-
 currence of retained dependencies. This is what happens when the build process of a
 component stores a path to a dependency in the component. For instance, the linker invo-
 cation above will store the path of the OpenSSL library in program , i.e., program will have
@@ -412,8 +413,8 @@ unique identifiers in file names that make this work. A sufficiently long pseudo
 number also does the trick. However, the hashes are needed to prevent interference, while
 at the same time preventing unnecessary duplication of identical components (which would
 happen with random paths).
-Section 1.2 first stated the goal of complete deployment: safe deployment re-
-quires that there are no missing dependencies. This means that we need to deploy closures
+
+**Closures** Section 1.2 first stated the goal of complete deployment: safe deployment requires that there are no missing dependencies. This means that we need to deploy closures
 of components under the “depends-on” relation. That is, when we deploy (i.e., copy) a
 component X to a client machine, and X depends on Y , then we also need to deploy Y to
 the client machine.
@@ -434,3 +435,8 @@ everyday interaction?
 • Can we deploy upgrades efficiently? That is, suppose that we want to upgrade Glibc
 (a dependency of all other components in Figure 2.1). Can we prevent a costly
 redownload of all dependent components?
+As we will see in the remainder of this thesis, the answer to these questions is “yes”.
+
+# Glossary
+
+**complete deployment** No missing dependencies during any deployment task.
